@@ -1,33 +1,26 @@
 package com.example.turnlabyrinth;
 
+import java.util.ArrayList;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-
-import java.util.ArrayList;
-
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 public class MainView extends SurfaceView implements SurfaceHolder.Callback, Runnable
 {
-
-
-	private static double e = 0.8;
 	private static double d = 0.99;
-	private float gx;
-	private float gy;
+	private float gx,gy;
 	private Paint paint;
 	private SurfaceHolder holder;
 	private Thread thread;
 	private ArrayList<Circle> container;
-	private int width;
-	private int height;
+	@SuppressWarnings("unused")
+	private int width,height;
 	private int flag = 0;
-	private float x_date = 0;
-	private float y_date = 0;
+	private float x_date , y_date;
 
 	public MainView(Context context)
 	{
@@ -39,19 +32,13 @@ public class MainView extends SurfaceView implements SurfaceHolder.Callback, Run
 		paint.setAntiAlias(true);
 		gx = gy = 0;
 
-		// getHolder()メソッドでSurfaceHolderを取得。さらにコールバックを登録
 		getHolder().addCallback(this);
 	}
-
-
-	//SurfaceView生成時に呼び出される
 	public void surfaceCreated(SurfaceHolder holder)
 	{
 		this.holder = holder;
 		thread = new Thread(this);
 	}
-
-	//SurfaceView変更時に呼び出される
 	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
 	{
 		if(thread != null )
@@ -61,25 +48,19 @@ public class MainView extends SurfaceView implements SurfaceHolder.Callback, Run
 			thread.start();
 		}
 	}
-
-	//SurfaceView破棄時に呼び出される
 	public void surfaceDestroyed(SurfaceHolder holder)
 	{
 		thread = null;
 	}
-
-	//スレッドによるSurfaceView更新処理
 	public void run()
 	{
+		x_date = y_date = 0;
 		
 		while (thread != null)
 		{
-			//描画処理
 			Canvas canvas = holder.lockCanvas();
 			canvas.drawColor(Color.argb(255, 0, 0, 0));
 			int size = container.size();
-
-
 		    Paint mpaint = new Paint();
 		    mpaint.setColor(Color.argb(255,255, 255, 255));
 			canvas.drawLine(50, 200, 300, 200, mpaint);
@@ -98,7 +79,6 @@ public class MainView extends SurfaceView implements SurfaceHolder.Callback, Run
 			float[] pts7 = {50, 50, 450, 50};
 			canvas.drawLines(pts7, mpaint);
 			
-
 			if(flag == 1)
 			{
 			    Paint goalpaint = new Paint();
@@ -106,7 +86,6 @@ public class MainView extends SurfaceView implements SurfaceHolder.Callback, Run
 				float[] goal = {350, 650, 350, 800};
 				canvas.drawLines(goal, goalpaint);
 			}
-			
 			if(flag == 2)
 			{
 			    Paint goalpaint = new Paint();
@@ -114,133 +93,93 @@ public class MainView extends SurfaceView implements SurfaceHolder.Callback, Run
 				float[] goal = {350, 650, 350, 800};
 				canvas.drawLines(goal, goalpaint);
 			}
-
-			// 計算をボールに反映
 			for(int i = 0 ; i < size ; i++)
 			{
-				Circle a = container.get(i);
+				Circle main_mine = container.get(i);
 				
-				a.dx *= d;
-				a.dx += gx;
-				x_date = a.x;
-				a.x += a.dx;
+				main_mine.dx *= d;
+				main_mine.dx += gx;
+				x_date = main_mine.x;
+				main_mine.x += main_mine.dx;
 				
-				a.dy *= d;
-				a.dy += gy;
-				y_date = a.y;
-				a.y += a.dy;
+				main_mine.dy *= d;
+				main_mine.dy += gy;
+				y_date = main_mine.y;
+				main_mine.y += main_mine.dy;
 
-				if(a.x <= 50)
+				if(main_mine.x <= 50 || main_mine.x >= 450)
 				{
-					a.x = 50;
-					a.dx *= -1;
-				}
-				if(a.y <= 50)
-				{
-					a.y = 50;
-					a.dy *= -1;
-				}
-				if(a.x >= 450)
-				{
-					a.x = 450;
-					a.dx *= -1;
-				}
-				if(a.y >= 800)
-				{
-					a.y = 800;
-					a.dy *= -1;
+					if(main_mine.x <= 50)
+					{
+						main_mine.x = 50;
+					}
+					else
+					{
+						main_mine.x = 450;
+					}
+					main_mine.dx *= -1;
 				}
 				
-				
-				
-				if(y_date < 200 && a.y >= 200)
+				if(main_mine.y <= 50 || main_mine.y >= 800)
+				{
+					if(main_mine.y <= 50)
+					{
+						main_mine.y = 50;
+					}
+					else
+					{
+						main_mine.y = 800;
+					}
+					main_mine.dy *= -1;
+				}
+				else if((y_date < 200 && main_mine.y >= 200) || (y_date > 200 && main_mine.y <= 200))
 				{
 					if(x_date <= 300 && x_date >= 50)
 					{
-						a.y = y_date;
-						a.dy *= -1;
+						main_mine.y = y_date;
+						main_mine.dy *= -1;
 					}
 				}
-				if(y_date > 200 && a.y <= 200)
+				else if((y_date < 350 && main_mine.y >= 350)||(y_date > 350 && main_mine.y <= 350))
+				{
+					if(x_date <= 450 && x_date >= 200)
+					{
+						main_mine.y = y_date;
+						main_mine.dy *= -1;
+					}
+				}
+				else if((y_date < 500 && main_mine.y >= 500) || (y_date > 500 && main_mine.y <= 500))
 				{
 					if(x_date <= 300 && x_date >= 50)
 					{
-						a.y = y_date;
-						a.dy *= -1;
+						main_mine.y = y_date;
+						main_mine.dy *= -1;
 					}
 				}
-
-				if(y_date < 350 && a.y >= 350)
+				else if((y_date < 650 && main_mine.y >= 650)||(y_date > 650 && main_mine.y <= 650))
 				{
 					if(x_date <= 450 && x_date >= 200)
 					{
-						a.y = y_date;
-						a.dy *= -1;
-					}
-				}
-				if(y_date > 350 && a.y <= 350)
-				{
-					if(x_date <= 450 && x_date >= 200)
-					{
-						a.y = y_date;
-						a.dy *= -1;
-					}
-				}
-
-				if(y_date < 500 && a.y >= 500)
-				{
-					if(x_date <= 300 && x_date >= 50)
-					{
-						a.y = y_date;
-						a.dy *= -1;
-					}
-				}
-				if(y_date > 500 && a.y <= 500)
-				{
-					if(x_date <= 300 && x_date >= 50)
-					{
-						a.y = y_date;
-						a.dy *= -1;
+						main_mine.y = y_date;
+						main_mine.dy *= -1;
 					}
 				}
 				
-				if(y_date < 650 && a.y >= 650)
-				{
-					if(x_date <= 450 && x_date >= 200)
-					{
-						a.y = y_date;
-						a.dy *= -1;
-					}
-				}
-				if(y_date > 650 && a.y <= 650)
-				{
-					if(x_date <= 450 && x_date >= 200)
-					{
-						a.y = y_date;
-						a.dy *= -1;
-					}
-				}
+				x_date = main_mine.x;
+				y_date = main_mine.y;
 				
-				
-				x_date = a.x;
-				y_date = a.y;
-				
-				paint.setColor(Color.argb(255, a.cr, a.cg, a.cb));
-				canvas.drawCircle(a.x, a.y, a.radius, paint);
+				paint.setColor(Color.argb(255, main_mine.cr, main_mine.cg, main_mine.cb));
+				canvas.drawCircle(main_mine.x, main_mine.y, main_mine.radius, paint);
 			}
 			holder.unlockCanvasAndPost(canvas);
 			
-			if(y_date > 650)
+			if(y_date > 650 && x_date > 350)
 			{
-				if(x_date > 350)
-				{
-					flag = 2;
-				}
+				flag = 2;
 			}
 		}
 	}
 
-	// クリック時のイベント
 	public boolean onTouchEvent(MotionEvent event)
 	{
 		if(event.getAction() == MotionEvent.ACTION_DOWN)
@@ -249,8 +188,8 @@ public class MainView extends SurfaceView implements SurfaceHolder.Callback, Run
 			if(flag == 0){
 				float x = 100;
 				float y = 100;
-				float dx = (float)(5);
-				float dy = (float)(5);
+				float dx = (float)5;
+				float dy = (float)5;
 				float ran = (float)0.5;
 				float r = ran*20+5;
 				float m = ran*10+10;
@@ -264,7 +203,6 @@ public class MainView extends SurfaceView implements SurfaceHolder.Callback, Run
 		return true;
 	}
 
-	// 加速度の更新
 	public void setAcce(float gx, float gy)
 	{
 		this.gx = gx;
